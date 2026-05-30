@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="あみだくじ">
+<title>あみだくじ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;background:#f2f2f7;color:#1c1c1e;min-height:100vh;padding-bottom:40px;}
+.header{background:#fff;padding:52px 20px 12px;border-bottom:0.5px solid rgba(0,0,0,0.15);}
+.header h1{font-size:22px;font-weight:700;color:#1c1c1e;}
+.content{padding:16px;}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:600;color:#8e8e93;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.edit-link{font-size:14px;color:#007aff;text-transform:none;letter-spacing:0;font-weight:400;cursor:pointer;padding:4px 0;}
+.select-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.select-row select{flex:1;font-size:16px;padding:10px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.15);background:#f2f2f7;color:#1c1c1e;-webkit-appearance:none;appearance:none;}
+.del-btn{width:36px;height:36px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:20px;line-height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-align:center;}
+.add-btn{background:none;border:none;color:#007aff;font-size:16px;padding:8px 0;cursor:pointer;display:flex;align-items:center;gap:6px;margin-top:2px;}
+.btn-primary{width:100%;background:#007aff;color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:600;cursor:pointer;margin-top:4px;-webkit-appearance:none;}
+.btn-primary:active{opacity:0.8;}
+.btn-secondary{background:#e5e5ea;color:#1c1c1e;border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:500;cursor:pointer;-webkit-appearance:none;}
+.btn-next{background:#34c759;color:#fff;border:none;border-radius:14px;padding:14px 24px;font-size:17px;font-weight:600;cursor:pointer;-webkit-appearance:none;}
+.btn-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+canvas{display:block;width:100%;border-radius:12px;background:#fff;}
+.status{font-size:15px;font-weight:500;color:#1c1c1e;min-height:22px;margin-bottom:4px;}
+.progress-text{font-size:13px;color:#8e8e93;margin-bottom:12px;}
+.result-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;}
+.result-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.result-name{font-weight:600;font-size:15px;flex:1;}
+.result-prize{font-size:15px;color:#1c1c1e;margin-right:6px;}
+.result-badge{background:#e5f0ff;color:#007aff;font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.edit-panel{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:2px solid #007aff;}
+.edit-panel-title{font-size:16px;font-weight:600;margin-bottom:12px;}
+.pool-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.pool-row input{flex:1;font-size:16px;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.15);background:#f2f2f7;color:#1c1c1e;-webkit-appearance:none;}
+.add-input-row{display:flex;gap:8px;margin-top:8px;}
+.add-input-row input{flex:1;font-size:16px;padding:10px;border-radius:10px;border:1px solid #007aff;background:#fff;color:#1c1c1e;-webkit-appearance:none;}
+.add-input-btn{background:#007aff;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:15px;font-weight:500;cursor:pointer;-webkit-appearance:none;white-space:nowrap;}
+.done-btn{width:100%;background:#34c759;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-top:12px;-webkit-appearance:none;}
+.hidden{display:none;}
+.section-label{font-size:13px;color:#8e8e93;margin-bottom:8px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎯 あみだくじ</h1>
+</div>
+
+<div class="content">
+
+  <div id="editNamePanel" class="edit-panel hidden">
+    <div class="edit-panel-title">参加者リストを編集</div>
+    <div id="namePoolRows"></div>
+    <div class="add-input-row">
+      <input id="namePoolInput" type="text" placeholder="名前を入力して追加" />
+      <button class="add-input-btn" id="addNameBtn">追加</button>
+    </div>
+    <button class="done-btn" id="doneNameBtn">完了</button>
+  </div>
+
+  <div id="editResultPanel" class="edit-panel hidden">
+    <div class="edit-panel-title">景品リストを編集</div>
+    <div id="resultPoolRows"></div>
+    <div class="add-input-row">
+      <input id="resultPoolInput" type="text" placeholder="景品を入力して追加" />
+      <button class="add-input-btn" id="addResultBtn">追加</button>
+    </div>
+    <button class="done-btn" id="doneResultBtn">完了</button>
+  </div>
+
+  <div id="setupPanel">
+    <div class="card">
+      <div class="card-title">
+        <span>参加者</span>
+        <span class="edit-link" id="editNameLink">リスト編集</span>
+      </div>
+      <div id="nameRows"></div>
+      <button class="add-btn" id="addNameSlotBtn">
+        <span style="font-size:22px;line-height:1;">＋</span> 参加者を追加
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>景品</span>
+        <span class="edit-link" id="editResultLink">リスト編集</span>
+      </div>
+      <div id="resultRows"></div>
+      <button class="add-btn" id="addResultSlotBtn">
+        <span style="font-size:22px;line-height:1;">＋</span> 景品を追加
+      </button>
+    </div>
+
+    <button class="btn-primary" id="generateBtn">あみだくじを作る</button>
+  </div>
+
+  <div id="canvasPanel" class="hidden">
+    <div class="btn-row">
+      <button class="btn-primary" id="startBtn" style="flex:1;">▶ スタート</button>
+      <button class="btn-next hidden" id="nextBtn">次へ →</button>
+      <button class="btn-secondary" id="resetBtn">リセット</button>
+      <button class="btn-secondary" id="backBtn">編集</button>
+    </div>
+    <div class="status" id="currentLabel"></div>
+    <div class="progress-text" id="progressLabel"></div>
+    <canvas id="c"></canvas>
+    <div id="resultArea" class="hidden" style="margin-top:16px;">
+      <div class="section-label">景品の結果</div>
+      <div id="resultCards"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var namePool = ['Aさん','Bさん','Cさん','Dさん','Eさん','Fさん'];
+var resultPool = ['1等','2等','3等','参加賞','はずれ'];
+var selectedNames = ['Aさん','Bさん','Cさん','Dさん'];
+var selectedResults = ['1等','2等','3等','はずれ'];
+var ladderData = null;
+var animTimer = null;
+var finishedPaths = [];
+var currentPerson = -1;
+var isAnimating = false;
+var HL_COLORS = ['#007aff','#34c759','#ff2d55','#ff9500','#af52de','#ff3b30'];
+
+function init() {
+  document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('startBtn').addEventListener('click', startFirst);
+  document.getElementById('nextBtn').addEventListener('click', nextPerson);
+  document.getElementById('resetBtn').addEventListener('click', resetView);
+  document.getElementById('backBtn').addEventListener('click', backToSetup);
+  document.getElementById('editNameLink').addEventListener('click', function(){ openEdit('name'); });
+  document.getElementById('editResultLink').addEventListener('click', function(){ openEdit('result'); });
+  document.getElementById('addNameSlotBtn').addEventListener('click', function(){ addSelectedSlot('name'); });
+  document.getElementById('addResultSlotBtn').addEventListener('click', function(){ addSelectedSlot('result'); });
+  document.getElementById('addNameBtn').addEventListener('click', addToNamePool);
+  document.getElementById('addResultBtn').addEventListener('click', addToResultPool);
+  document.getElementById('doneNameBtn').addEventListener('click', function(){ closeEdit('name'); });
+  document.getElementById('doneResultBtn').addEventListener('click', function(){ closeEdit('result'); });
+  document.getElementById('namePoolInput').addEventListener('keydown', function(e){ if(e.key==='Enter') addToNamePool(); });
+  document.getElementById('resultPoolInput').addEventListener('keydown', function(e){ if(e.key==='Enter') addToResultPool(); });
+  renderInputs();
+}
+
+function renderInputs() {
+  renderSelectRows('nameRows', selectedNames, namePool, 'name');
+  renderSelectRows('resultRows', selectedResults, resultPool, 'result');
+}
+
+function renderSelectRows(id, selected, pool, type) {
+  var html = '';
+  for (var i = 0; i < selected.length; i++) {
+    var val = selected[i];
+    var opts = '';
+    for (var j = 0; j < pool.length; j++) {
+      opts += '<option value="' + pool[j] + '"' + (pool[j]===val?' selected':'') + '>' + pool[j] + '</option>';
+    }
+    html += '<div class="select-row" data-type="' + type + '" data-idx="' + i + '">'
+      + '<select>' + opts + '</select>'
+      + '<button class="del-btn" data-del-type="' + type + '" data-del-idx="' + i + '">×</button>'
+      + '</div>';
+  }
+  var el = document.getElementById(id);
+  el.innerHTML = html;
+  var selects = el.querySelectorAll('select');
+  for (var k = 0; k < selects.length; k++) {
+    (function(idx, t){ selects[idx].addEventListener('change', function(){ changeSelected(t, idx, this.value); }); })(k, type);
+  }
+  var dels = el.querySelectorAll('.del-btn');
+  for (var k = 0; k < dels.length; k++) {
+    (function(idx, t){ dels[idx].addEventListener('click', function(){ removeSlot(t, idx); }); })(k, type);
+  }
+}
+
+function changeSelected(type, i, val) {
+  if(type==='name') selectedNames[i]=val; else selectedResults[i]=val;
+}
+function removeSlot(type, i) {
+  if(type==='name'){ if(selectedNames.length>2){selectedNames.splice(i,1);renderInputs();} }
+  else { if(selectedResults.length>2){selectedResults.splice(i,1);renderInputs();} }
+}
+function addSelectedSlot(type) {
+  if(type==='name') selectedNames.push(namePool[0]||'');
+  else selectedResults.push(resultPool[0]||'');
+  renderInputs();
+}
+
+function renderNamePoolRows() {
+  var html = '';
+  for (var i = 0; i < namePool.length; i++) {
+    html += '<div class="pool-row"><input type="text" value="' + namePool[i] + '" data-idx="' + i + '" />'
+      + '<button class="del-btn" data-pidx="' + i + '">×</button></div>';
+  }
+  var el = document.getElementById('namePoolRows');
+  el.innerHTML = html;
+  var inputs = el.querySelectorAll('input');
+  for (var k = 0; k < inputs.length; k++) {
+    (function(idx){ inputs[idx].addEventListener('input', function(){ namePool[idx]=this.value; }); })(k);
+  }
+  var dels = el.querySelectorAll('.del-btn');
+  for (var k = 0; k < dels.length; k++) {
+    (function(idx){ dels[idx].addEventListener('click', function(){ removeFromNamePool(idx); }); })(k);
+  }
+}
+
+function renderResultPoolRows() {
+  var html = '';
+  for (var i = 0; i < resultPool.length; i++) {
+    html += '<div class="pool-row"><input type="text" value="' + resultPool[i] + '" data-idx="' + i + '" />'
+      + '<button class="del-btn" data-pidx="' + i + '">×</button></div>';
+  }
+  var el = document.getElementById('resultPoolRows');
+  el.innerHTML = html;
+  var inputs = el.querySelectorAll('input');
+  for (var k = 0; k < inputs.length; k++) {
+    (function(idx){ inputs[idx].addEventListener('input', function(){ resultPool[idx]=this.value; }); })(k);
+  }
+  var dels = el.querySelectorAll('.del-btn');
+  for (var k = 0; k < dels.length; k++) {
+    (function(idx){ dels[idx].addEventListener('click', function(){ removeFromResultPool(idx); }); })(k);
+  }
+}
+
+function openEdit(type) {
+  if(type==='name'){
+    renderNamePoolRows();
+    document.getElementById('namePoolInput').value='';
+    document.getElementById('editNamePanel').classList.remove('hidden');
+  } else {
+    renderResultPoolRows();
+    document.getElementById('resultPoolInput').value='';
+    document.getElementById('editResultPanel').classList.remove('hidden');
+  }
+  window.scrollTo(0,0);
+}
+
+function closeEdit(type) {
+  if(type==='name'){
+    document.getElementById('editNamePanel').classList.add('hidden');
+    selectedNames=selectedNames.filter(function(n){ return namePool.indexOf(n)>=0; });
+    if(selectedNames.length<2) selectedNames=namePool.slice(0,2);
+  } else {
+    document.getElementById('editResultPanel').classList.add('hidden');
+    selectedResults=selectedResults.filter(function(r){ return resultPool.indexOf(r)>=0; });
+    if(selectedResults.length<2) selectedResults=resultPool.slice(0,2);
+  }
+  renderInputs();
+}
+
+function addToNamePool() {
+  var inp=document.getElementById('namePoolInput');
+  var val=inp.value.trim();
+  if(!val) return;
+  if(namePool.indexOf(val)<0) namePool.push(val);
+  inp.value='';
+  renderNamePoolRows();
+}
+function addToResultPool() {
+  var inp=document.getElementById('resultPoolInput');
+  var val=inp.value.trim();
+  if(!val) return;
+  if(resultPool.indexOf(val)<0) resultPool.push(val);
+  inp.value='';
+  renderResultPoolRows();
+}
+function removeFromNamePool(i){ if(namePool.length>1){namePool.splice(i,1);renderNamePoolRows();} }
+function removeFromResultPool(i){ if(resultPool.length>1){resultPool.splice(i,1);renderResultPoolRows();} }
+
+function syncFromSelects() {
+  var ns=document.querySelectorAll('#nameRows select');
+  for(var i=0;i<ns.length;i++) selectedNames[i]=ns[i].value;
+  var rs=document.querySelectorAll('#resultRows select');
+  for(var i=0;i<rs.length;i++) selectedResults[i]=rs[i].value;
+}
+
+function shuffle(arr) {
+  for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return arr;
+}
+
+function buildLadder(n) {
+  var RUNGS=Math.max(6,n*3);
+  var rungs=[];
+  for(var row=0;row<RUNGS;row++){
+    var used={};var rowRungs=[];
+    for(var c=0;c<n-1;c++){
+      if(!used[c]&&!used[c+1]&&Math.random()<0.45){rowRungs.push(c);used[c]=true;used[c+1]=true;}
+    }
+    rungs.push(rowRungs);
+  }
+  var arr=[];for(var i=0;i<n;i++) arr.push(i);
+  return {n:n,RUNGS:RUNGS,rungs:rungs,resOrder:shuffle(arr)};
+}
+
+function generate() {
+  syncFromSelects();
+  var names=selectedNames.slice();
+  var results=selectedResults.slice();
+  var n=Math.max(names.length,results.length);
+  while(names.length<n) names.push('名前'+names.length);
+  while(results.length<n) results.push('景品'+results.length);
+  var ld=buildLadder(n);
+  ld.names=names;ld.results=results;
+  ladderData=ld;
+  finishedPaths=[];currentPerson=-1;isAnimating=false;
+  document.getElementById('setupPanel').classList.add('hidden');
+  document.getElementById('canvasPanel').classList.remove('hidden');
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('currentLabel').textContent='';
+  document.getElementById('progressLabel').textContent='';
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  window.scrollTo(0,0);
+  drawBase([]);
+}
+
+var PAD=36;
+function getSize() {
+  var cv=document.getElementById('c');
+  var W=cv.parentElement.clientWidth||375;
+  var H=Math.max(420,ladderData.n*64+130);
+  var dpr=window.devicePixelRatio||2;
+  cv.width=W*dpr;cv.height=H*dpr;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  return {W:W,H:H,dpr:dpr};
+}
+function colX(i,n,W){return PAD+i*(W-PAD*2)/(n>1?n-1:1);}
+function rowY(r,RUNGS,H){return 60+r*(H-130)/(RUNGS>1?RUNGS-1:1);}
+
+function drawBase(highlightList) {
+  var cv=document.getElementById('c');
+  var sz=getSize();var W=sz.W;var H=sz.H;var dpr=sz.dpr;
+  var ctx=cv.getContext('2d');
+  var n=ladderData.n;var RUNGS=ladderData.RUNGS;var rungs=ladderData.rungs;
+  var resOrder=ladderData.resOrder;var names=ladderData.names;var results=ladderData.results;
+  ctx.save();ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
+  var textC='#1c1c1e';var borderC='rgba(0,0,0,0.18)';
+  ctx.textAlign='center';ctx.font='600 13px -apple-system,sans-serif';
+  for(var i=0;i<n;i++){ctx.fillStyle=textC;ctx.fillText(names[i],colX(i,n,W),18);}
+  for(var i=0;i<n;i++){
+    var x=colX(i,n,W);
+    ctx.beginPath();ctx.moveTo(x,24);ctx.lineTo(x,rowY(RUNGS-1,RUNGS,H));
+    ctx.strokeStyle=borderC;ctx.lineWidth=2;ctx.stroke();
+  }
+  for(var row=0;row<RUNGS;row++){
+    for(var ci=0;ci<rungs[row].length;ci++){
+      var c=rungs[row][ci];
+      var x1=colX(c,n,W);var x2=colX(c+1,n,W);var y=rowY(row,RUNGS,H);
+      ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);
+      ctx.strokeStyle=borderC;ctx.lineWidth=2;ctx.stroke();
+    }
+  }
+  ctx.font='600 13px -apple-system,sans-serif';
+  for(var i=0;i<n;i++){
+    ctx.fillStyle=textC;
+    ctx.fillText(results[resOrder[i]],colX(i,n,W),rowY(RUNGS-1,RUNGS,H)+22);
+  }
+  for(var hi=0;hi<highlightList.length;hi++){
+    var hl=highlightList[hi];var pts=hl.pts;var color=hl.color;
+    if(pts.length<2) continue;
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    for(var k=1;k<pts.length;k++) ctx.lineTo(pts[k].x,pts[k].y);
+    ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+    var last=pts[pts.length-1];
+    ctx.beginPath();ctx.arc(last.x,last.y,6,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+  }
+  ctx.restore();
+}
+
+function tracePath(startCol) {
+  var n=ladderData.n;var RUNGS=ladderData.RUNGS;var rungs=ladderData.rungs;
+  var cv=document.getElementById('c');
+  var W=cv.parentElement.clientWidth||375;
+  var H=Math.max(420,n*64+130);
+  var col=startCol;
+  var pts=[{x:colX(col,n,W),y:24}];
+  for(var row=0;row<RUNGS;row++){
+    var y=rowY(row,RUNGS,H);
+    pts.push({x:colX(col,n,W),y:y});
+    var rr=rungs[row];
+    if(rr.indexOf(col)>=0){col++;pts.push({x:colX(col,n,W),y:y});}
+    else if(col>0&&rr.indexOf(col-1)>=0){col--;pts.push({x:colX(col,n,W),y:y});}
+  }
+  pts.push({x:colX(col,n,W),y:rowY(RUNGS-1,RUNGS,H)});
+  return {pts:pts,endCol:col};
+}
+
+function startFirst(){
+  document.getElementById('startBtn').classList.add('hidden');
+  animatePerson(0);
+}
+function nextPerson(){ if(isAnimating) return; animatePerson(currentPerson+1); }
+
+function animatePerson(personIdx) {
+  var n=ladderData.n;var names=ladderData.names;var results=ladderData.results;var resOrder=ladderData.resOrder;
+  if(personIdx>=n){
+    document.getElementById('currentLabel').textContent='全員完了！';
+    document.getElementById('progressLabel').textContent='';
+    document.getElementById('nextBtn').classList.add('hidden');
+    showResults();return;
+  }
+  isAnimating=true;currentPerson=personIdx;
+  document.getElementById('nextBtn').classList.add('hidden');
+  var name=names[personIdx];
+  document.getElementById('currentLabel').textContent=name+' のルートを追っています…';
+  document.getElementById('progressLabel').textContent=(personIdx+1)+' / '+n+'人目';
+  var color=HL_COLORS[personIdx%HL_COLORS.length];
+  var result=tracePath(personIdx);var pts=result.pts;var endCol=result.endCol;
+  var step=0;var total=pts.length;
+  var fp=finishedPaths.slice();
+  function tick(){
+    drawBase(fp.concat([{pts:pts.slice(0,step+1),color:color}]));
+    step++;
+    if(step<total){ animTimer=setTimeout(tick,28); }
+    else {
+      finishedPaths.push({pts:pts,color:color,endCol:endCol,personIdx:personIdx});
+      isAnimating=false;
+      document.getElementById('currentLabel').textContent=name+' → '+results[resOrder[endCol]];
+      if(personIdx===n-1){
+        setTimeout(function(){
+          document.getElementById('currentLabel').textContent='全員完了！';
+          document.getElementById('progressLabel').textContent='';
+          document.getElementById('nextBtn').classList.add('hidden');
+          showResults();
+        },600);
+      } else {
+        document.getElementById('nextBtn').classList.remove('hidden');
+      }
+    }
+  }
+  tick();
+}
+
+function showResults() {
+  document.getElementById('resultArea').classList.remove('hidden');
+  var resOrder=ladderData.resOrder;var names=ladderData.names;var results=ladderData.results;
+  var html='';
+  for(var i=0;i<finishedPaths.length;i++){
+    var fp=finishedPaths[i];var ri=resOrder[fp.endCol];
+    html+='<div class="result-item">'
+      +'<span class="result-dot" style="background:'+fp.color+';"></span>'
+      +'<span class="result-name">'+names[fp.personIdx]+'</span>'
+      +'<span class="result-prize">'+results[ri]+'</span>'
+      +'<span class="result-badge">'+results[ri]+'</span>'
+      +'</div>';
+  }
+  document.getElementById('resultCards').innerHTML=html;
+  setTimeout(function(){ document.getElementById('resultArea').scrollIntoView({behavior:'smooth'}); },200);
+}
+
+function resetView() {
+  clearTimeout(animTimer);
+  finishedPaths=[];currentPerson=-1;isAnimating=false;
+  document.getElementById('startBtn').classList.remove('hidden');
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('currentLabel').textContent='';
+  document.getElementById('progressLabel').textContent='';
+  drawBase([]);
+}
+
+function backToSetup() {
+  clearTimeout(animTimer);
+  document.getElementById('canvasPanel').classList.add('hidden');
+  document.getElementById('setupPanel').classList.remove('hidden');
+  document.getElementById('resultArea').classList.add('hidden');
+  window.scrollTo(0,0);
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
